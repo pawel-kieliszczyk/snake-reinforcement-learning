@@ -7,6 +7,7 @@ from game import Game
 class LearningEnvironment(object):
     def __init__(self):
         self.game = Game(select_random_snake_and_food_positions=True)
+        self.games_played = 0
 
     def reset(self):
         self.game = Game(select_random_snake_and_food_positions=True)
@@ -23,6 +24,7 @@ class LearningEnvironment(object):
 
         if done:
             reward = -1
+            self.games_played += 1
 
         return (observation, reward, done)
 
@@ -47,3 +49,6 @@ class LearningEnvironment(object):
         observation[g.food_at[0]+1, g.food_at[1]+1, 2] = 1.0
 
         return observation
+
+    def get_number_of_played_games(self):
+        return self.games_played

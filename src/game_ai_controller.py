@@ -41,16 +41,17 @@ class GameAIController(object):
             action = agent.select_action(obs)
             game.make_action(action)
 
-            self._draw_game(win, game)
+            self._draw_game(win, game, learning_environment.get_number_of_played_games())
             steps += 1
 
-    def _draw_game(self, win, g):
+    def _draw_game(self, win, g, games_played):
         win.clear()
 
         # draw border and print score
         win.border(False)
         win.addstr(0, g.get_width() / 2 - 2, ' SNAKE ', curses.color_pair(1))
         win.addstr(0, 2, ' Score: ' + str(g.get_score()) + ' ', curses.color_pair(1))
+        win.addstr(g.get_height()+1, 2, ' Games played: ' + str(games_played) + ' ', curses.color_pair(1))
 
         # draw snake
         for p in g.snake:
@@ -62,4 +63,3 @@ class GameAIController(object):
 
         win.refresh()
         sleep(0.33)
-
