@@ -20,8 +20,8 @@ class Menu(object):
             win.attrset(curses.color_pair(4))
             win.keypad(True)
             win.nodelay(False)
-            win.border(False)
-            win.addstr(0, Game.WIDTH / 2 - 2, ' SNAKE ', curses.color_pair(1))
+            win.border(0)
+            win.addstr(0, int(Game.WIDTH / 2 - 2), ' SNAKE ', curses.color_pair(1))
 
             win.addstr(1, 1, 'Welcome to Snake game!', curses.color_pair(3))
             win.addstr(2, 1, 'Press:', curses.color_pair(3))

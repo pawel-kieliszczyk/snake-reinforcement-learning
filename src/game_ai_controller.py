@@ -52,10 +52,11 @@ class GameAIController(object):
         win.clear()
 
         # draw border and print score
-        win.border(False)
-        win.addstr(0, g.get_width() / 2 - 2, ' SNAKE ', curses.color_pair(1))
-        win.addstr(0, 2, ' Score: ' + str(g.get_score()) + ' ', curses.color_pair(1))
-        win.addstr(g.get_height()+1, 2, ' Games played: ' + str(games_played) + ' ', curses.color_pair(1))
+        win.border(0)
+        #win.addstr(0, int(g.get_width() / 2 - 2), ' SNAKE ', curses.color_pair(1))
+        #win.addstr(0, 2, ' Score: ' + str(g.get_score()) + ' ', curses.color_pair(1))
+        #win.addstr(g.get_height()+1, 2, ' Games played: ' + str(games_played) + ' ', curses.color_pair(1))
+        win.addstr(0, 2, 'Pts:' + str(g.get_score()), curses.color_pair(1))
 
         # draw snake
         for p in g.snake:

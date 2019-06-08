@@ -175,7 +175,7 @@ class A2CAgent:
 
     def _logits_loss(self, acts_and_advs, logits):
         actions, advantages = tf.split(acts_and_advs, 2, axis=-1)
-        weighted_sparse_ce = kls.SparseCategoricalCrossentropy(from_logits=True)
+        weighted_sparse_ce = kls.CategoricalCrossentropy(from_logits=True)
         actions = tf.cast(actions, tf.int32)
         policy_loss = weighted_sparse_ce(actions, logits, sample_weight=advantages)
         entropy_loss = kls.categorical_crossentropy(logits, logits, from_logits=True)

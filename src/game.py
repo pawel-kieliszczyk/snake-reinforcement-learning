@@ -10,8 +10,8 @@ class Action(Enum):
     NONE = 5
 
 class Game(object):
-    HEIGHT = 15
-    WIDTH = 40
+    HEIGHT = 7#15
+    WIDTH = 7#40
 
     class Direction(Enum):
         UP = 1
