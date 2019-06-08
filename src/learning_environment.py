@@ -40,10 +40,10 @@ class LearningEnvironment(object):
             observation[Game.HEIGHT + 1, i, 0] = 1.0
 
         # snake's head
-        observation[g.snake[0][0]+1, g.snake[0][1]+1, 1] = 1.0
+        observation[g.snake[0][0]+1, g.snake[0][1]+1, 1] = -1.0
         # snake's tail
         for (r, c) in g.snake[1:]:
-            observation[r+1, c+1, 1] = -1.0
+            observation[r+1, c+1, 1] = 1.0
 
         # food
         observation[g.food_at[0]+1, g.food_at[1]+1, 2] = 1.0
