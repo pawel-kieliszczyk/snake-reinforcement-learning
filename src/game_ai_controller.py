@@ -29,9 +29,11 @@ class GameAIController(object):
         agent = A2CAgent(model)
         learning_environment = LearningEnvironment()
 
-        while True:
+        for _ in xrange(100):
             agent.train(learning_environment)
             self._play_test_game(learning_environment, agent, win)
+
+        agent.save_model()
 
     def _play_test_game(self, learning_environment, agent, win):
         game = Game(select_random_snake_and_food_positions=True)
@@ -55,11 +57,11 @@ class GameAIController(object):
 
         # draw snake
         for p in g.snake:
-            win.addch(p[0] + 1, p[1] + 1, '#', curses.color_pair(3))
-        win.addch(g.snake[0][0] + 1, g.snake[0][1] + 1, '#', curses.color_pair(2))
+            win.addstr(p[0] + 1, p[1] + 1, '#', curses.color_pair(3))
+        win.addstr(g.snake[0][0] + 1, g.snake[0][1] + 1, '#', curses.color_pair(2))
 
         # draw food
-        win.addch(g.food_at[0] + 1, g.food_at[1] + 1, '*', curses.color_pair(5) | curses.A_BOLD)
+        win.addstr(g.food_at[0] + 1, g.food_at[1] + 1, '*', curses.color_pair(5) | curses.A_BOLD)
 
         win.refresh()
         sleep(0.33)
