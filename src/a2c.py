@@ -1,3 +1,4 @@
+import os.path
 import numpy as np
 import tensorflow as tf
 import tensorflow.keras.layers as kl
@@ -157,8 +158,9 @@ class A2CAgent:
         self.model.save_weights('saved_model/weights', save_format='tf')
 
     def load_model_if_previously_saved(self, env):
-        self.train(env, updates=1) # needed to initialize the model
-        self.model.load_weights('saved_model/weights')
+        if os.path.exists('saved_model'):
+            self.train(env, updates=1) # needed to initialize the model
+            self.model.load_weights('saved_model/weights')
 
     def _returns_advantages(self, rewards, dones, values, next_value):
         returns = np.append(np.zeros_like(rewards), next_value, axis=-1)

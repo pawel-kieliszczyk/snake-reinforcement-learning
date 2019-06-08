@@ -29,6 +29,8 @@ class GameAIController(object):
         agent = A2CAgent(model)
         learning_environment = LearningEnvironment()
 
+        agent.load_model_if_previously_saved(learning_environment)
+
         for _ in xrange(100):
             agent.train(learning_environment)
             self._play_test_game(learning_environment, agent, win)
