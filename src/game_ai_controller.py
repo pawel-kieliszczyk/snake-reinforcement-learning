@@ -39,14 +39,20 @@ class GameAIController(object):
 
     def _play_test_game(self, learning_environment, agent, win):
         game = Game(select_random_snake_and_food_positions=True)
-        steps = 0
-        while steps < 100 and not game.is_finished():
+        steps_without_scoring = 0
+        while steps_without_scoring < 100 and not game.is_finished():
             obs = learning_environment.build_observation(game)
             action = agent.select_action(obs)
+
+            score_before = game.get_score()
             game.make_action(action)
+            score_after = game.get_score()
+
+            if score_after > score_before:
+                steps_without_scoring = 0
 
             self._draw_game(win, game, learning_environment.get_number_of_played_games())
-            steps += 1
+            steps_without_scoring += 1
 
     def _draw_game(self, win, g, games_played):
         win.clear()
