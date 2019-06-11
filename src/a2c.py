@@ -19,92 +19,69 @@ class Model(tf.keras.Model):
         super(Model, self).__init__('a2c_model')
         self.all_possible_actions_in_game = [Action.LEFT, Action.RIGHT, Action.UP, Action.DOWN] # ignoring Action.NONE
 
-        self.conv1 = kl.Conv2D(32, 5, padding='same', input_shape=(Game.HEIGHT+2, Game.WIDTH+2, 3))
-        self.bn1 = kl.BatchNormalization()
-        self.activation1 = kl.Activation('relu')
-        self.conv2 = kl.Conv2D(64, 5, padding='same')
-        self.bn2 = kl.BatchNormalization()
-        self.activation2 = kl.Activation('relu')
-        self.pooling1 = kl.MaxPooling2D(pool_size=(2, 2), strides=(2, 2))
-        self.dropout1 = kl.Dropout(0.25)
-        self.conv3 = kl.Conv2D(128, 3, padding='same')
-        self.bn3 = kl.BatchNormalization()
-        self.activation3 = kl.Activation('relu')
-        self.conv4 = kl.Conv2D(128, 3, padding='same')
-        self.bn4 = kl.BatchNormalization()
-        self.activation4 = kl.Activation('relu')
-        self.pooling2 = kl.MaxPooling2D(pool_size=(2, 2), strides=(2, 2))
-        self.dropout2 = kl.Dropout(0.25)
-        self.flatten = kl.Flatten()
+        self.common_layers = []
+        self.common_layers.append(kl.Conv2D(32, 3, padding='same', input_shape=(Game.HEIGHT+2, Game.WIDTH+2, 3)))
+        self.common_layers.append(kl.BatchNormalization())
+        self.common_layers.append(kl.Activation('relu'))
+        self.common_layers.append(kl.Conv2D(64, 3, padding='same'))
+        self.common_layers.append(kl.BatchNormalization())
+        self.common_layers.append(kl.Activation('relu'))
+        self.common_layers.append(kl.MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        self.common_layers.append(kl.Dropout(0.25))
+        # self.common_layers.append(kl.Conv2D(128, 3, padding='same'))
+        # self.common_layers.append(kl.BatchNormalization())
+        # self.common_layers.append(kl.Activation('relu'))
+        # self.common_layers.append(kl.Conv2D(128, 3, padding='same'))
+        # self.common_layers.append(kl.BatchNormalization())
+        # self.common_layers.append(kl.Activation('relu'))
+        # self.common_layers.append(kl.MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        # self.common_layers.append(kl.Dropout(0.25))
+        self.common_layers.append(kl.Flatten())
 
         # actor branch
-        self.actor_dense1 = kl.Dense(256)
-        self.actor_bn1 = kl.BatchNormalization()
-        self.actor_activation1 = kl.Activation('relu')
-        self.actor_dropout1 = kl.Dropout(0.25)
-        self.actor_dense2 = kl.Dense(128)
-        self.actor_bn2 = kl.BatchNormalization()
-        self.actor_activation2 = kl.Activation('relu')
-        self.actor_dropout2 = kl.Dropout(0.25)
-        self.actor_logits = kl.Dense(len(self.all_possible_actions_in_game), name='policy_logits')
+        # final layer should output logits
+        self.actor_layers = []
+        self.actor_layers.append(kl.Dense(256))
+        self.actor_layers.append(kl.BatchNormalization())
+        self.actor_layers.append(kl.Activation('relu'))
+        self.actor_layers.append(kl.Dropout(0.25))
+        self.actor_layers.append(kl.Dense(64))
+        self.actor_layers.append(kl.BatchNormalization())
+        self.actor_layers.append(kl.Activation('relu'))
+        self.actor_layers.append(kl.Dropout(0.25))
+        self.actor_layers.append(kl.Dense(len(self.all_possible_actions_in_game), name='policy_logits'))
 
-        #critic branch
-        self.critic_dense1 = kl.Dense(256)
-        self.critic_bn1 = kl.BatchNormalization()
-        self.critic_activation1 = kl.Activation('relu')
-        self.critic_dropout1 = kl.Dropout(0.25)
-        self.critic_dense2 = kl.Dense(128)
-        self.critic_bn2 = kl.BatchNormalization()
-        self.critic_activation2 = kl.Activation('relu')
-        self.critic_dropout2 = kl.Dropout(0.25)
-        self.critic_value = kl.Dense(1, name='value')
+        # critic branch
+        # final layer should output a single value (state value / expected reward)
+        self.critic_layers = []
+        self.critic_layers.append(kl.Dense(256))
+        self.critic_layers.append(kl.BatchNormalization())
+        self.critic_layers.append(kl.Activation('relu'))
+        self.critic_layers.append(kl.Dropout(0.25))
+        self.critic_layers.append(kl.Dense(64))
+        self.critic_layers.append(kl.BatchNormalization())
+        self.critic_layers.append(kl.Activation('relu'))
+        self.critic_layers.append(kl.Dropout(0.25))
+        self.critic_layers.append(kl.Dense(1, name='value'))
 
         self.dist = ProbabilityDistribution()
 
     def call(self, inputs):
-        x = tf.convert_to_tensor(inputs)
+        output_from_common_layers = tf.convert_to_tensor(inputs)
+        # forward pass through common layers
+        for layer in self.common_layers:
+            output_from_common_layers = layer(output_from_common_layers)
 
-        conv1 = self.conv1(x)
-        bn1 = self.bn1(conv1)
-        activation1 = self.activation1(bn1)
-        conv2 = self.conv2(activation1)
-        bn2 = self.bn2(conv2)
-        activation2 = self.activation2(bn2)
-        pooling1 = self.pooling1(activation2)
-        dropout1 = self.dropout1(pooling1)
-        conv3 = self.conv3(dropout1)
-        bn3 = self.bn3(conv3)
-        activation3 = self.activation3(bn3)
-        conv4 = self.conv4(activation3)
-        bn4 = self.bn4(conv4)
-        activation4 = self.activation4(bn4)
-        pooling2 = self.pooling2(activation4)
-        dropout2 = self.dropout2(pooling2)
-        flatten = self.flatten(dropout2)
+        actor_output = output_from_common_layers
+        # forward pass through actor layers
+        for layer in self.actor_layers:
+            actor_output = layer(actor_output)
 
-        # actor branch
-        actor_dense1 = self.actor_dense1(flatten)
-        actor_bn1 = self.actor_bn1(actor_dense1)
-        actor_activation1 = self.actor_activation1(actor_bn1)
-        actor_dropout1 = self.actor_dropout1(actor_activation1)
-        actor_dense2 = self.actor_dense2(actor_dropout1)
-        actor_bn2 = self.actor_bn2(actor_dense2)
-        actor_activation2 = self.actor_activation2(actor_bn2)
-        actor_dropout2 = self.actor_dropout2(actor_activation2)
-        actor_logits = self.actor_logits(actor_dropout2)
-
-        #critic branch
-        critic_dense1 = self.critic_dense1(flatten)
-        critic_bn1 = self.critic_bn1(critic_dense1)
-        critic_activation1 = self.critic_activation1(critic_bn1)
-        critic_dropout1 = self.critic_dropout1(critic_activation1)
-        critic_dense2 = self.critic_dense2(critic_dropout1)
-        critic_bn2 = self.critic_bn2(critic_dense2)
-        critic_activation2 = self.critic_activation2(critic_bn2)
-        critic_dropout2 = self.critic_dropout2(critic_activation2)
-        critic_value = self.critic_value(critic_dropout2)
-
-        return actor_logits, critic_value
+        critic_output = output_from_common_layers
+        # forward pass through actor layers
+        for layer in self.critic_layers:
+            critic_output = layer(critic_output)
+        return actor_output, critic_output
 
     def action_value(self, obs):
         logits, value = self.predict(obs)
