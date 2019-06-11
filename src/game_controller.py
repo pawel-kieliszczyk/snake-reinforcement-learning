@@ -57,14 +57,14 @@ class GameController(object):
         win.clear()
 
         # draw border and print score
-        win.border(False)
+        win.border(0)
         win.addstr(0, g.get_width() / 2 - 2, ' SNAKE ', curses.color_pair(1))
         win.addstr(0, 2, ' Score: ' + str(g.get_score()) + ' ', curses.color_pair(1))
 
         # draw snake
         for p in g.snake:
-            win.addch(p[0] + 1, p[1] + 1, '#', curses.color_pair(3))
-        win.addch(g.snake[0][0] + 1, g.snake[0][1] + 1, '#', curses.color_pair(2))
+            win.addstr(p[0] + 1, p[1] + 1, '#', curses.color_pair(3))
+        win.addstr(g.snake[0][0] + 1, g.snake[0][1] + 1, '#', curses.color_pair(2))
 
         # draw food
-        win.addch(g.food_at[0] + 1, g.food_at[1] + 1, '*', curses.color_pair(5) | curses.A_BOLD)
+        win.addstr(g.food_at[0] + 1, g.food_at[1] + 1, '*', curses.color_pair(5) | curses.A_BOLD)

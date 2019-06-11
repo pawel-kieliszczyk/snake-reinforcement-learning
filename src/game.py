@@ -10,8 +10,8 @@ class Action(Enum):
     NONE = 5
 
 class Game(object):
-    HEIGHT = 7#15
-    WIDTH = 7#40
+    HEIGHT = 15
+    WIDTH = 40
 
     class Direction(Enum):
         UP = 1
@@ -27,11 +27,7 @@ class Game(object):
             self.snake = [(4, 4), (4, 3), (4, 2)]
             self.food_at = (6, 10)
 
-        #self.snake = [(4, 4), (4, 3), (4, 2)]
-        #self._generate_snake()
         self.direction = Game.Direction.RIGHT
-        #self.food_at = (6, 10)
-        #self._generate_food()
 
         self.finished = False
         self.score = 0
@@ -76,7 +72,12 @@ class Game(object):
         self.snake.insert(0, head_at)
         if head_at == self.food_at:
             self.score += 1
-            self._generate_food()
+
+            if len(self.snake) == (self.get_height() * self.get_width()):
+                # game fully solved
+                finished = True
+            else:
+                self._generate_food()
         else:
             del self.snake[-1]
 
