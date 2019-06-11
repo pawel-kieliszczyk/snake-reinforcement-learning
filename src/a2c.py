@@ -98,7 +98,7 @@ class A2CAgent:
         }
         self.model = model
         self.model.compile(
-            optimizer=ko.Adam(),
+            optimizer=ko.Adam(lr=0.01),
             loss=[self._logits_loss, self._value_loss]
         )
 
