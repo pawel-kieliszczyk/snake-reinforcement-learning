@@ -105,7 +105,7 @@ class A2CAgent:
     def train(self, env, batch_sz=32, updates=100):
         action_ids = np.empty((batch_sz,), dtype=np.int32)
         rewards, dones, values = np.empty((3, batch_sz))
-        observations = np.empty((batch_sz,) + (Game.HEIGHT+2, Game.WIDTH+2, 3))
+        observations = np.empty((batch_sz,) + (Game.HEIGHT+2, Game.WIDTH+2, 2))
 
         ep_rews = [0.0]
         next_obs = env.reset()
