@@ -75,7 +75,8 @@ class Game(object):
 
             if len(self.snake) == (self.get_height() * self.get_width()):
                 # game fully solved
-                finished = True
+                self.score += 100
+                self.finished = True
             else:
                 self._generate_food()
         else:

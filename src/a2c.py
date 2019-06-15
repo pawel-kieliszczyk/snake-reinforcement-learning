@@ -20,14 +20,14 @@ class Model(tf.keras.Model):
         self.all_possible_actions_in_game = [Action.LEFT, Action.RIGHT, Action.UP, Action.DOWN] # ignoring Action.NONE
 
         self.common_layers = []
-        self.common_layers.append(kl.Conv2D(32, 3, padding='same', input_shape=(Game.HEIGHT+2, Game.WIDTH+2, 3)))
-        self.common_layers.append(kl.BatchNormalization())
+        self.common_layers.append(kl.Conv2D(64, 3, padding='same', input_shape=(Game.HEIGHT+2, Game.WIDTH+2, 2)))
+        #self.common_layers.append(kl.BatchNormalization())
         self.common_layers.append(kl.Activation('relu'))
         self.common_layers.append(kl.Conv2D(64, 3, padding='same'))
-        self.common_layers.append(kl.BatchNormalization())
+        #self.common_layers.append(kl.BatchNormalization())
         self.common_layers.append(kl.Activation('relu'))
-        self.common_layers.append(kl.MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-        self.common_layers.append(kl.Dropout(0.25))
+        #self.common_layers.append(kl.MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
+        #self.common_layers.append(kl.Dropout(0.25))
         # self.common_layers.append(kl.Conv2D(128, 3, padding='same'))
         # self.common_layers.append(kl.BatchNormalization())
         # self.common_layers.append(kl.Activation('relu'))
@@ -42,26 +42,26 @@ class Model(tf.keras.Model):
         # final layer should output logits
         self.actor_layers = []
         self.actor_layers.append(kl.Dense(256))
-        self.actor_layers.append(kl.BatchNormalization())
+        #self.actor_layers.append(kl.BatchNormalization())
         self.actor_layers.append(kl.Activation('relu'))
-        self.actor_layers.append(kl.Dropout(0.25))
+        #self.actor_layers.append(kl.Dropout(0.25))
         self.actor_layers.append(kl.Dense(64))
-        self.actor_layers.append(kl.BatchNormalization())
+        #self.actor_layers.append(kl.BatchNormalization())
         self.actor_layers.append(kl.Activation('relu'))
-        self.actor_layers.append(kl.Dropout(0.25))
+        #self.actor_layers.append(kl.Dropout(0.25))
         self.actor_layers.append(kl.Dense(len(self.all_possible_actions_in_game), name='policy_logits'))
 
         # critic branch
         # final layer should output a single value (state value / expected reward)
         self.critic_layers = []
         self.critic_layers.append(kl.Dense(256))
-        self.critic_layers.append(kl.BatchNormalization())
+        #self.critic_layers.append(kl.BatchNormalization())
         self.critic_layers.append(kl.Activation('relu'))
-        self.critic_layers.append(kl.Dropout(0.25))
+        #self.critic_layers.append(kl.Dropout(0.25))
         self.critic_layers.append(kl.Dense(64))
-        self.critic_layers.append(kl.BatchNormalization())
+        #self.critic_layers.append(kl.BatchNormalization())
         self.critic_layers.append(kl.Activation('relu'))
-        self.critic_layers.append(kl.Dropout(0.25))
+        #self.critic_layers.append(kl.Dropout(0.25))
         self.critic_layers.append(kl.Dense(1, name='value'))
 
         self.dist = ProbabilityDistribution()
@@ -92,13 +92,13 @@ class Model(tf.keras.Model):
 class A2CAgent:
     def __init__(self, model):
         self.params = {
-            'gamma': 0.99,
+            'gamma': 0.95,
             'value': 0.5,
             'entropy': 0.0001
         }
         self.model = model
         self.model.compile(
-            optimizer=ko.Adam(lr=0.01),
+            optimizer=ko.Adam(lr=0.001),
             loss=[self._logits_loss, self._value_loss]
         )
 
@@ -152,7 +152,7 @@ class A2CAgent:
 
     def _logits_loss(self, acts_and_advs, logits):
         actions, advantages = tf.split(acts_and_advs, 2, axis=-1)
-        weighted_sparse_ce = kls.CategoricalCrossentropy(from_logits=True)
+        weighted_sparse_ce = kls.SparseCategoricalCrossentropy(from_logits=True)
         actions = tf.cast(actions, tf.int32)
         policy_loss = weighted_sparse_ce(actions, logits, sample_weight=advantages)
         entropy_loss = kls.categorical_crossentropy(logits, logits, from_logits=True)
