@@ -31,7 +31,7 @@ class GameAIController(object):
 
         agent.load_model_if_previously_saved(learning_environment)
 
-        for _ in range(500):
+        for _ in range(300):
             self._play_test_game(learning_environment, agent, win)
             agent.train(learning_environment)
 
@@ -51,10 +51,10 @@ class GameAIController(object):
             if score_after > score_before:
                 steps_without_scoring = 0
 
-            self._draw_game(win, game, learning_environment.get_number_of_played_games())
+            self._draw_game(win, game, learning_environment.get_number_of_played_games(), learning_environment.get_average_score())
             steps_without_scoring += 1
 
-    def _draw_game(self, win, g, games_played):
+    def _draw_game(self, win, g, games_played, average_score):
         win.clear()
 
         # draw border and print score
@@ -62,7 +62,10 @@ class GameAIController(object):
         win.addstr(0, int(g.get_width() / 2 - 2), ' SNAKE ', curses.color_pair(1))
         #win.addstr(0, 2, ' Score: ' + str(g.get_score()) + ' ', curses.color_pair(1))
         #win.addstr(g.get_height()+1, 2, ' Games played: ' + str(games_played) + ' ', curses.color_pair(1))
-        win.addstr(int(g.get_height()) + 1, 2, ' Pts: ' + str(g.get_score()) + ' ', curses.color_pair(1))
+        win.addstr(int(g.get_height()) + 1, 1, 'Pts:' + str(g.get_score()), curses.color_pair(1))
+
+        average_score_text = 'Avg:' + str(average_score)
+        win.addstr(int(g.get_height()) + 1, g.get_width() + 1 - len(average_score_text), average_score_text, curses.color_pair(1))
 
         # draw snake
         for p in g.snake:
