@@ -30,7 +30,7 @@ class LearningEnvironment(object):
         else:
             self.steps_without_scoring = 0
 
-        if self.steps_without_scoring == 100:
+        if self.steps_without_scoring == 300:
             done = True
 
         if done:
