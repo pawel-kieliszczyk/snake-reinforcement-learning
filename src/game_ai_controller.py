@@ -31,7 +31,7 @@ class GameAIController(object):
 
         agent.load_model_if_previously_saved(learning_environment)
 
-        for _ in range(200):
+        for _ in range(500):
             self._play_test_game(learning_environment, agent, win)
             agent.train(learning_environment)
 
@@ -59,10 +59,10 @@ class GameAIController(object):
 
         # draw border and print score
         win.border(0)
-        #win.addstr(0, int(g.get_width() / 2 - 2), ' SNAKE ', curses.color_pair(1))
+        win.addstr(0, int(g.get_width() / 2 - 2), ' SNAKE ', curses.color_pair(1))
         #win.addstr(0, 2, ' Score: ' + str(g.get_score()) + ' ', curses.color_pair(1))
         #win.addstr(g.get_height()+1, 2, ' Games played: ' + str(games_played) + ' ', curses.color_pair(1))
-        win.addstr(0, 2, 'Pts:' + str(g.get_score()), curses.color_pair(1))
+        win.addstr(int(g.get_height()) + 1, 2, ' Pts: ' + str(g.get_score()) + ' ', curses.color_pair(1))
 
         # draw snake
         for p in g.snake:
@@ -73,4 +73,4 @@ class GameAIController(object):
         win.addstr(g.food_at[0] + 1, g.food_at[1] + 1, '*', curses.color_pair(5) | curses.A_BOLD)
 
         win.refresh()
-        sleep(0.33)
+        sleep(0.1)
