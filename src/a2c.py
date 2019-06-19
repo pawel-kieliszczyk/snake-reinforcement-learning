@@ -96,7 +96,7 @@ class Model(tf.keras.Model):
 class A2CAgent:
     def __init__(self, model):
         self.params = {
-            'gamma': 0.95,
+            'gamma': 0.99,
             'value': 0.5,
             'entropy': 0.0001
         }
