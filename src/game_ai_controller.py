@@ -31,7 +31,7 @@ class GameAIController(object):
 
         agent.load_model_if_previously_saved(learning_environment)
 
-        for _ in range(300):
+        for _ in range(200):
             self._play_test_game(learning_environment, agent, win)
             agent.train(learning_environment)
 
