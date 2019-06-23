@@ -29,8 +29,8 @@ class GameController(object):
             action = self._read_action_from_input(win)
             g.make_action(action)
 
-        win.addstr(g.get_height() / 2 - 1, g.get_width() / 2 - 3, 'GAME OVER', curses.color_pair(4) | curses.A_BOLD)
-        win.addstr(g.get_height() / 2, g.get_width() / 2 - 6, 'PRESS SPACE KEY', curses.color_pair(4) | curses.A_BOLD)
+        win.addstr(g.get_height() / 2, g.get_width() / 2 - 3, 'GAME OVER', curses.color_pair(4) | curses.A_BOLD)
+        win.addstr(g.get_height() / 2 + 1, g.get_width() / 2 - 6, 'PRESS SPACE KEY', curses.color_pair(4) | curses.A_BOLD)
 
         win.nodelay(False)
 

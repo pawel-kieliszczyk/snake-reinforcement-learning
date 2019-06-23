@@ -16,23 +16,25 @@ class Menu(object):
             curses.init_pair(5, curses.COLOR_GREEN, curses.COLOR_BLACK)
             stdscr.clear()
 
-            win = curses.newwin(Game.HEIGHT + 2, Game.WIDTH + 2, 0, 0)
+            win = curses.newwin(10, 40, 0, 0)
             win.attrset(curses.color_pair(4))
             win.keypad(True)
             win.nodelay(False)
-            win.border(0)
-            win.addstr(0, int(Game.WIDTH / 2 - 2), ' SNAKE ', curses.color_pair(1))
 
-            win.addstr(1, 1, 'Welcome to Snake game!', curses.color_pair(3))
-            win.addstr(2, 1, 'Press:', curses.color_pair(3))
-            win.addstr(3, 1, '\'1\' (to play the game)', curses.color_pair(3))
-            win.addstr(4, 1, '\'2\' (to watch AI learning to play)', curses.color_pair(3))
-            win.addstr(5, 1, '\'3\' (to exit the game)', curses.color_pair(3))
+            win.addstr(0, 0, 'Welcome to Snake game!', curses.color_pair(3))
+            win.addstr(1, 0, 'Press:', curses.color_pair(3))
+            win.addstr(2, 0, '\'1\' (to play the game)', curses.color_pair(3))
+            win.addstr(3, 0, '\'2\' (to watch AI learning to play)', curses.color_pair(3))
+            win.addstr(4, 0, '\'3\' (to watch trained AI playing)', curses.color_pair(3))
+            win.addstr(5, 0, '\'4\' (to exit)', curses.color_pair(3))
 
             key = win.getch()
 
-            while key not in [ord('1'), ord('2'), ord('3')]:
+            while key not in [ord('1'), ord('2'), ord('3'), ord('4')]:
                 key = win.getch()
+
+            win.clear()
+            win.refresh()
 
             if key == ord('1'):
                 game_controller = GameController()
@@ -41,4 +43,8 @@ class Menu(object):
                 game_ai_controller = GameAIController()
                 game_ai_controller.learn(stdscr)
             elif key == ord('3'):
+                #game_ai_controller = GameAIController()
+                #game_ai_controller.learn(stdscr)
+                pass
+            elif key == ord('4'):
                 break

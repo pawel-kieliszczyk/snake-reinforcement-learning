@@ -36,7 +36,7 @@ class LearningEnvironment(object):
         if done:
             self.games_played += 1
             self.recent_game_scores.append(self.game.get_score())
-            while len(self.recent_game_scores) > 100:
+            while len(self.recent_game_scores) > 1000:
                 del self.recent_game_scores[0]
 
         return (observation, reward, done)
