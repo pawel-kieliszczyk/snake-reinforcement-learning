@@ -1,5 +1,6 @@
 from time import sleep
 import curses
+import random
 
 from game import Action
 from game import Game
@@ -31,8 +32,10 @@ class GameAIController(object):
 
         agent.load_model_if_previously_saved(learning_environment)
 
-        for _ in range(200):
-            self._play_test_game(learning_environment, agent, win)
+        for iter in range(200):
+            if iter % 10 == 0:
+                self._play_test_game(learning_environment, agent, win)
+
             agent.train(learning_environment)
 
         agent.save_model()
@@ -44,6 +47,9 @@ class GameAIController(object):
             obs = learning_environment.build_observation(game)
             action = agent.select_action(obs)
 
+            # simple guard to play longer
+            action = self._action_if_not_dying_or_random_action(game, action)
+
             score_before = game.get_score()
             game.make_action(action)
             score_after = game.get_score()
@@ -53,6 +59,52 @@ class GameAIController(object):
 
             self._draw_game(win, game, learning_environment.get_number_of_played_games(), learning_environment.get_average_score())
             steps_without_scoring += 1
+
+    def _action_if_not_dying_or_random_action(self, game, default_action):
+        if self._action_not_dying(game, default_action):
+            return default_action
+
+        good_actions = []
+        if self._is_free(game, (game.snake[0][0]-1, game.snake[0][1])):
+            good_actions.append(Action.UP)
+        if self._is_free(game, (game.snake[0][0]+1, game.snake[0][1])):
+            good_actions.append(Action.DOWN)
+        if self._is_free(game, (game.snake[0][0], game.snake[0][1]-1)):
+            good_actions.append(Action.LEFT)
+        if self._is_free(game, (game.snake[0][0], game.snake[0][1]+1)):
+            good_actions.append(Action.RIGHT)
+
+        if not good_actions:
+            return default_action
+
+        return random.choice(good_actions)
+
+    def _action_not_dying(self, game, action):
+        x = game.snake[0][0]
+        y = game.snake[0][1]
+
+        if action == Action.UP:
+            x -= 1
+        if action == Action.DOWN:
+            x += 1
+        if action == Action.LEFT:
+            y -= 1
+        if action == Action.RIGHT:
+            y += 1
+
+        new_head_at = (x, y)
+        return self._is_free(game, new_head_at)
+
+    def _is_free(self, game, loc):
+        if loc[0] < 0 or loc[0] >= game.get_height():
+            return False
+        if loc[1] < 0 or loc[1] >= game.get_width():
+            return False
+
+        if loc in game.snake:
+            return False
+
+        return True
 
     def _draw_game(self, win, g, games_played, average_score):
         win.clear()

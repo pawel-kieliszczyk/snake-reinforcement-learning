@@ -17,55 +17,29 @@ class ProbabilityDistribution(tf.keras.Model):
 class Model(tf.keras.Model):
     def __init__(self):
         super(Model, self).__init__('a2c_model')
-        self.all_possible_actions_in_game = [Action.LEFT, Action.RIGHT, Action.UP, Action.DOWN] # ignoring Action.NONE
+        self.all_possible_actions_in_game = [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT] # ignoring Action.NONE
 
         self.common_layers = []
-        self.common_layers.append(kl.Conv2D(64, 3, padding='same', input_shape=(Game.HEIGHT+2, Game.WIDTH+2, 2)))
-        #self.common_layers.append(kl.BatchNormalization())
-        self.common_layers.append(kl.Activation('relu'))
-        self.common_layers.append(kl.Conv2D(64, 3, padding='same'))
-        #self.common_layers.append(kl.BatchNormalization())
-        self.common_layers.append(kl.Activation('relu'))
+        self.common_layers.append(kl.Conv2D(64, 3, padding='same', activation='relu', input_shape=(Game.HEIGHT+2, Game.WIDTH+2, 2)))
+        self.common_layers.append(kl.Conv2D(64, 3, padding='same', activation='relu'))
         self.common_layers.append(kl.MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-        #self.common_layers.append(kl.Dropout(0.25))
-        self.common_layers.append(kl.Conv2D(128, 3, padding='same'))
-        # self.common_layers.append(kl.BatchNormalization())
-        self.common_layers.append(kl.Activation('relu'))
-        self.common_layers.append(kl.Conv2D(128, 3, padding='same'))
-        # self.common_layers.append(kl.BatchNormalization())
-        self.common_layers.append(kl.Activation('relu'))
+        self.common_layers.append(kl.Conv2D(128, 3, padding='same', activation='relu'))
+        self.common_layers.append(kl.Conv2D(128, 3, padding='same', activation='relu'))
         self.common_layers.append(kl.MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-        # self.common_layers.append(kl.Dropout(0.25))
         self.common_layers.append(kl.Flatten())
 
         # actor branch
         # final layer should output logits
         self.actor_layers = []
-        #self.actor_layers.append(kl.Dense(256))
-        self.actor_layers.append(kl.Dense(1024))
-        #self.actor_layers.append(kl.BatchNormalization())
-        self.actor_layers.append(kl.Activation('relu'))
-        #self.actor_layers.append(kl.Dropout(0.25))
-        #self.actor_layers.append(kl.Dense(64))
-        self.actor_layers.append(kl.Dense(128))
-        #self.actor_layers.append(kl.BatchNormalization())
-        self.actor_layers.append(kl.Activation('relu'))
-        #self.actor_layers.append(kl.Dropout(0.25))
+        self.actor_layers.append(kl.Dense(1024, activation='relu'))
+        self.actor_layers.append(kl.Dense(128, activation='relu'))
         self.actor_layers.append(kl.Dense(len(self.all_possible_actions_in_game), name='policy_logits'))
 
         # critic branch
         # final layer should output a single value (state value / expected reward)
         self.critic_layers = []
-        #self.critic_layers.append(kl.Dense(256))
-        self.critic_layers.append(kl.Dense(1024))
-        #self.critic_layers.append(kl.BatchNormalization())
-        self.critic_layers.append(kl.Activation('relu'))
-        #self.critic_layers.append(kl.Dropout(0.25))
-        #self.critic_layers.append(kl.Dense(64))
-        self.critic_layers.append(kl.Dense(128))
-        #self.critic_layers.append(kl.BatchNormalization())
-        self.critic_layers.append(kl.Activation('relu'))
-        #self.critic_layers.append(kl.Dropout(0.25))
+        self.critic_layers.append(kl.Dense(1024, activation='relu'))
+        self.critic_layers.append(kl.Dense(128, activation='relu'))
         self.critic_layers.append(kl.Dense(1, name='value'))
 
         self.dist = ProbabilityDistribution()
