@@ -59,7 +59,7 @@ class GameController(object):
         # draw border and print score
         win.border(0)
         win.addstr(0, g.get_width() / 2 - 2, ' SNAKE ', curses.color_pair(1))
-        win.addstr(0, 2, ' Score: ' + str(g.get_score()) + ' ', curses.color_pair(1))
+        win.addstr(int(g.get_height()) + 1, 1, 'Pts:' + str(g.get_score()), curses.color_pair(1))
 
         # draw snake
         for p in g.snake:
