@@ -43,8 +43,8 @@ class Menu(object):
                 game_ai_controller = GameAIController()
                 game_ai_controller.learn(stdscr)
             elif key == ord('3'):
-                #game_ai_controller = GameAIController()
-                #game_ai_controller.learn(stdscr)
+                game_ai_controller = GameAIController()
+                game_ai_controller.play(stdscr)
                 pass
             elif key == ord('4'):
                 break

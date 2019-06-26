@@ -40,6 +40,39 @@ class GameAIController(object):
 
         agent.save_model()
 
+    def play(self, stdscr):
+        # init screen
+        curses.curs_set(False)
+        curses.init_pair(1, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+        curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(4, curses.COLOR_CYAN, curses.COLOR_BLACK)
+        curses.init_pair(5, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        stdscr.clear()
+
+        # create window
+        height = Game.HEIGHT + 2  # adding 2 for border
+        width = Game.WIDTH + 2  # adding 2 for border
+        win = curses.newwin(height, width, 0, 0)
+        win.attrset(curses.color_pair(4))
+
+        model = Model()
+        agent = A2CAgent(model)
+        learning_environment = LearningEnvironment()
+
+        agent.load_pretrained_model(learning_environment)
+
+        self._play_test_game(learning_environment, agent, win)
+
+        win.addstr(Game.HEIGHT / 2, Game.WIDTH / 2 - 3, 'GAME OVER', curses.color_pair(4) | curses.A_BOLD)
+        win.addstr(Game.HEIGHT / 2 + 1, Game.WIDTH / 2 - 6, 'PRESS SPACE KEY', curses.color_pair(4) | curses.A_BOLD)
+
+        win.nodelay(False)
+
+        key = win.getch()
+        while key != ord(' '):
+            key = win.getch()
+
     def _play_test_game(self, learning_environment, agent, win):
         game = Game(select_random_snake_and_food_positions=True)
         steps_without_scoring = 0

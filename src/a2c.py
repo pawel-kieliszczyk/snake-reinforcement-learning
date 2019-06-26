@@ -117,6 +117,11 @@ class A2CAgent:
             self.train(env, updates=1) # needed to initialize the model
             self.model.load_weights('saved_model/weights')
 
+    def load_pretrained_model(self, env):
+        if os.path.exists('pretrained_model'):
+            self.train(env, updates=1) # needed to initialize the model
+            self.model.load_weights('pretrained_model/weights')
+
     def _returns_advantages(self, rewards, dones, values, next_value):
         returns = np.append(np.zeros_like(rewards), next_value, axis=-1)
         for t in reversed(range(rewards.shape[0])):
