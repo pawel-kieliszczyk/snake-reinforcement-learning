@@ -11,20 +11,8 @@ from learning_environment import LearningEnvironment
 
 class GameAIController(object):
     def learn(self, stdscr):
-        # init screen
-        curses.curs_set(False)
-        curses.init_pair(1, curses.COLOR_YELLOW, curses.COLOR_BLACK)
-        curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
-        curses.init_pair(3, curses.COLOR_WHITE, curses.COLOR_BLACK)
-        curses.init_pair(4, curses.COLOR_CYAN, curses.COLOR_BLACK)
-        curses.init_pair(5, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        stdscr.clear()
-
-        # create window
-        height = Game.HEIGHT + 2  # adding 2 for border
-        width = Game.WIDTH + 2  # adding 2 for border
-        win = curses.newwin(height, width, 0, 0)
-        win.attrset(curses.color_pair(4))
+        self._initialize_screen(stdscr)
+        win = self._create_window()
 
         model = Model()
         agent = A2CAgent(model)
@@ -41,7 +29,18 @@ class GameAIController(object):
         agent.save_model()
 
     def play(self, stdscr):
-        # init screen
+        self._initialize_screen(stdscr)
+        win = self._create_window()
+
+        model = Model()
+        agent = A2CAgent(model)
+        learning_environment = LearningEnvironment()
+        agent.load_pretrained_model(learning_environment)
+
+        self._play_test_game(learning_environment, agent, win)
+        self._draw_game_over_text_and_wait_for_input(win)
+
+    def _initialize_screen(self, stdscr):
         curses.curs_set(False)
         curses.init_pair(1, curses.COLOR_YELLOW, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_RED, curses.COLOR_BLACK)
@@ -50,33 +49,19 @@ class GameAIController(object):
         curses.init_pair(5, curses.COLOR_GREEN, curses.COLOR_BLACK)
         stdscr.clear()
 
-        # create window
+    def _create_window(self):
         height = Game.HEIGHT + 2  # adding 2 for border
         width = Game.WIDTH + 2  # adding 2 for border
+
         win = curses.newwin(height, width, 0, 0)
         win.attrset(curses.color_pair(4))
 
-        model = Model()
-        agent = A2CAgent(model)
-        learning_environment = LearningEnvironment()
-
-        agent.load_pretrained_model(learning_environment)
-
-        self._play_test_game(learning_environment, agent, win)
-
-        win.addstr(Game.HEIGHT / 2, Game.WIDTH / 2 - 3, 'GAME OVER', curses.color_pair(4) | curses.A_BOLD)
-        win.addstr(Game.HEIGHT / 2 + 1, Game.WIDTH / 2 - 6, 'PRESS SPACE KEY', curses.color_pair(4) | curses.A_BOLD)
-
-        win.nodelay(False)
-
-        key = win.getch()
-        while key != ord(' '):
-            key = win.getch()
+        return win
 
     def _play_test_game(self, learning_environment, agent, win):
         game = Game(select_random_snake_and_food_positions=True)
         steps_without_scoring = 0
-        while steps_without_scoring < 100 and not game.is_finished():
+        while steps_without_scoring < 200 and not game.is_finished():
             obs = learning_environment.build_observation(game)
             action = agent.select_action(obs)
 
@@ -90,7 +75,7 @@ class GameAIController(object):
             if score_after > score_before:
                 steps_without_scoring = 0
 
-            self._draw_game(win, game, learning_environment.get_number_of_played_games(), learning_environment.get_average_score())
+            self._draw_game(win, game, learning_environment.get_average_score())
             steps_without_scoring += 1
 
     def _action_if_not_dying_or_random_action(self, game, default_action):
@@ -139,14 +124,12 @@ class GameAIController(object):
 
         return True
 
-    def _draw_game(self, win, g, games_played, average_score):
+    def _draw_game(self, win, g, average_score):
         win.clear()
 
         # draw border and print score
         win.border(0)
         win.addstr(0, int(g.get_width() / 2 - 2), ' SNAKE ', curses.color_pair(1))
-        #win.addstr(0, 2, ' Score: ' + str(g.get_score()) + ' ', curses.color_pair(1))
-        #win.addstr(g.get_height()+1, 2, ' Games played: ' + str(games_played) + ' ', curses.color_pair(1))
         win.addstr(int(g.get_height()) + 1, 1, 'Pts:' + str(g.get_score()), curses.color_pair(1))
 
         average_score_text = 'Avg:' + str(average_score)
@@ -162,3 +145,13 @@ class GameAIController(object):
 
         win.refresh()
         sleep(0.1)
+
+    def _draw_game_over_text_and_wait_for_input(self, win):
+        win.addstr(Game.HEIGHT / 2, Game.WIDTH / 2 - 3, 'GAME OVER', curses.color_pair(4) | curses.A_BOLD)
+        win.addstr(Game.HEIGHT / 2 + 1, Game.WIDTH / 2 - 6, 'PRESS SPACE KEY', curses.color_pair(4) | curses.A_BOLD)
+
+        win.nodelay(False)
+
+        key = win.getch()
+        while key != ord(' '):
+            key = win.getch()
