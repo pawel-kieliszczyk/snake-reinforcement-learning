@@ -75,7 +75,7 @@ class GameAIController(object):
             if score_after > score_before:
                 steps_without_scoring = 0
 
-            self._draw_game(win, game, learning_environment.get_average_score())
+            self._draw_game(win, game)
             steps_without_scoring += 1
 
     def _action_if_not_dying_or_random_action(self, game, default_action):
@@ -124,16 +124,13 @@ class GameAIController(object):
 
         return True
 
-    def _draw_game(self, win, g, average_score):
+    def _draw_game(self, win, g):
         win.clear()
 
         # draw border and print score
         win.border(0)
         win.addstr(0, int(g.get_width() / 2 - 2), ' SNAKE ', curses.color_pair(1))
         win.addstr(int(g.get_height()) + 1, 1, 'Pts:' + str(g.get_score()), curses.color_pair(1))
-
-        average_score_text = 'Avg:' + str(average_score)
-        win.addstr(int(g.get_height()) + 1, g.get_width() + 1 - len(average_score_text), average_score_text, curses.color_pair(1))
 
         # draw snake
         for p in g.snake:

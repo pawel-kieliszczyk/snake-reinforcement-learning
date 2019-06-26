@@ -8,7 +8,6 @@ class LearningEnvironment(object):
     def __init__(self):
         self.game = Game(select_random_snake_and_food_positions=True)
         self.steps_without_scoring = 0
-        self.recent_game_scores = []
 
     def reset(self):
         self.game = Game(select_random_snake_and_food_positions=True)
@@ -31,11 +30,6 @@ class LearningEnvironment(object):
 
         if self.steps_without_scoring == 300:
             done = True
-
-        if done:
-            self.recent_game_scores.append(self.game.get_score())
-            while len(self.recent_game_scores) > 1000:
-                del self.recent_game_scores[0]
 
         return (observation, reward, done)
 
@@ -60,9 +54,3 @@ class LearningEnvironment(object):
         observation[g.food_at[0]+1, g.food_at[1]+1, 0] = -1.0
 
         return observation
-
-    def get_average_score(self):
-        if len(self.recent_game_scores) == 0:
-            return 0
-
-        return int(sum(self.recent_game_scores) / len(self.recent_game_scores))
