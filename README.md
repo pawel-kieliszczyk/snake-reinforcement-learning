@@ -5,7 +5,7 @@
 
 AI learning to play Snake game "from pixels" with Tensorflow 2.0.
 
-// TODO: Add image
+![](snake-animation.gif)
 
 
 ## Requirements
