@@ -10,20 +10,40 @@ AI learning to play Snake game "from pixels" with Tensorflow 2.0.
 
 ## Requirements
 
-Python 2 and Tensorflow 2.0
+Python 2 and Tensorflow 2.0 Beta or later
 
 
-## Features
+## Usage
 
-To start the game, simply type:
+To train AI, simply type:
 
 ```
-$ python src/snake.py
+$ python src/train.py
 ```
 
-Simply follow instructions visible in the screen. From the menu you can choose:
- + to play the game
- + train the A2C agent to play
- + watch a fully trained A2C agent playing the game
+The agent can be trained multiple times. It will keep improving. Its state is saved automatically.
 
-You can train the agent multiple times. The agent's state is saved after each training phase, so it will keep improving.
+If you want to watch your trained AI playing the game:
+
+```
+$ python src/play.py
+```
+
+The repository contains a pre-trained AI (trained on 1 GPU + 12 CPUs). To watch it playing, type:
+
+```
+$ python src/play_pretrained.py
+```
+
+## Implementation details
+
+Implementation uses a distributed version of Advantage Actor-Critic method (A2C).
+It consists of two types of processes:
+ + **master process** (1 instance): It owns the neural network model. It broadcasts network's weights to all "worker" processes (see below) and waits for mini-batches of experiences. Then it combines all the mini-batches and performs a network update using SGD. Then it broadcasts the current neural network's weights to workers again.
+ + **worker process** (as many as number of cores): Each worker has its own copy of an A2C agent. Neural networks weights are received from "master" process (see above). Sample Snake games are played, a mini-batch of experiences is collected and sent back to master. Each worker then waits for an updated set of network's weights.
+
+
+Neural network architecture:
+ + Shared layers by both actor and critic: 4x convlutional layer (filters: 3x3, channels: 64).
+ + Actor's head (policy head): 1x convolutional layer (filters: 1x1, channels: 2), followed by a fully connected layer (4 units, one per move: up, down, left, right)
+ + Critic's head (value head): 1x convolutional layer (filters: 1x1, channels: 1), followed by a fully connected layer (64 units), followed by a fully connected layer (1 unit - state's value)

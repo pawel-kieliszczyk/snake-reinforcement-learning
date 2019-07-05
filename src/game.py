@@ -10,8 +10,8 @@ class Action(Enum):
     NONE = 5
 
 class Game(object):
-    HEIGHT = 7
-    WIDTH = 15
+    HEIGHT = 8
+    WIDTH = 14
 
     class Direction(Enum):
         UP = 1
@@ -75,7 +75,6 @@ class Game(object):
 
             if len(self.snake) == (self.get_height() * self.get_width()):
                 # game fully solved
-                self.score += 100
                 self.finished = True
             else:
                 self._generate_food()

@@ -5,66 +5,107 @@ import tensorflow.keras.layers as kl
 import tensorflow.keras.losses as kls
 import tensorflow.keras.optimizers as ko
 
-from game import Action
-from game import Game
+from game import Game, Action
 
 
-class ProbabilityDistribution(tf.keras.Model):
+class EntryLayer(tf.keras.Model):
+    def __init__(self):
+        super(EntryLayer, self).__init__()
+        self.conv = tf.keras.layers.Conv2D(64, (3, 3), padding='same', activation='relu')
+
+    def call(self, input_tensor, training=False):
+        return self.conv(input_tensor)
+
+
+class RepeatedLayer(tf.keras.Model):
+    def __init__(self):
+        super(RepeatedLayer, self).__init__()
+        self.conv = tf.keras.layers.Conv2D(64, (3, 3), padding='same', activation='relu')
+
+    def call(self, input_tensor, training=False):
+        return self.conv(input_tensor)
+
+
+class PolicyHeadLayer(tf.keras.Model):
+    def __init__(self, num_of_actions):
+        super(PolicyHeadLayer, self).__init__()
+        self.conv = tf.keras.layers.Conv2D(2, (1, 1), padding='same', activation='relu')
+        self.flatten = tf.keras.layers.Flatten()
+        self.dense = tf.keras.layers.Dense(num_of_actions)
+
+    def call(self, input_tensor, training=False):
+        x = self.conv(input_tensor)
+        x = self.flatten(x)
+        return self.dense(x)
+
+
+class ValueHeadLayer(tf.keras.Model):
+    def __init__(self):
+        super(ValueHeadLayer, self).__init__()
+        self.conv = tf.keras.layers.Conv2D(1, (1, 1), padding='same', activation='relu')
+        self.flatten = tf.keras.layers.Flatten()
+        self.dense1 = tf.keras.layers.Dense(64, activation='relu')
+        self.dense2 = tf.keras.layers.Dense(1)
+
+    def call(self, input_tensor, training=False):
+        x = self.conv(input_tensor)
+        x = self.flatten(x)
+        x = self.dense1(x)
+        return self.dense2(x)
+
+
+class SampleActionFromLogits(tf.keras.Model):
     def call(self, logits):
         return tf.squeeze(tf.random.categorical(logits, 1), axis=-1)
 
 
+class TopActionFromLogits(tf.keras.Model):
+    def call(self, logits):
+        return tf.argmax(logits, 1)
+
+
 class Model(tf.keras.Model):
     def __init__(self):
-        super(Model, self).__init__('a2c_model')
+        super(Model, self).__init__()
         self.all_possible_actions_in_game = [Action.UP, Action.DOWN, Action.LEFT, Action.RIGHT] # ignoring Action.NONE
 
         self.common_layers = []
-        self.common_layers.append(kl.Conv2D(64, 3, padding='same', activation='relu', input_shape=(Game.HEIGHT+2, Game.WIDTH+2, 2)))
-        self.common_layers.append(kl.Conv2D(64, 3, padding='same', activation='relu'))
-        self.common_layers.append(kl.MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-        self.common_layers.append(kl.Conv2D(128, 3, padding='same', activation='relu'))
-        self.common_layers.append(kl.Conv2D(128, 3, padding='same', activation='relu'))
-        self.common_layers.append(kl.MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
-        self.common_layers.append(kl.Flatten())
+        self.common_layers.append(EntryLayer())
+        for _ in range(3):
+            self.common_layers.append(RepeatedLayer())
 
-        # actor branch
-        # final layer should output logits
-        self.actor_layers = []
-        self.actor_layers.append(kl.Dense(1024, activation='relu'))
-        self.actor_layers.append(kl.Dense(128, activation='relu'))
-        self.actor_layers.append(kl.Dense(len(self.all_possible_actions_in_game), name='policy_logits'))
+        self.actor_head = PolicyHeadLayer(len(self.all_possible_actions_in_game))
+        self.critic_head = ValueHeadLayer()
 
-        # critic branch
-        # final layer should output a single value (state value / expected reward)
-        self.critic_layers = []
-        self.critic_layers.append(kl.Dense(1024, activation='relu'))
-        self.critic_layers.append(kl.Dense(128, activation='relu'))
-        self.critic_layers.append(kl.Dense(1, name='value'))
+        self.sample_action_from_logits = SampleActionFromLogits()
+        self.top_action_from_logits = TopActionFromLogits()
 
-        self.dist = ProbabilityDistribution()
+    def call(self, input_tensor, training=False):
+        output_from_common_layers = tf.convert_to_tensor(input_tensor)
 
-    def call(self, inputs):
-        output_from_common_layers = tf.convert_to_tensor(inputs)
-        # forward pass through common layers
         for layer in self.common_layers:
-            output_from_common_layers = layer(output_from_common_layers)
+            output_from_common_layers = layer(output_from_common_layers, training=training)
 
-        actor_output = output_from_common_layers
-        # forward pass through actor layers
-        for layer in self.actor_layers:
-            actor_output = layer(actor_output)
+        actor_output = self.actor_head(output_from_common_layers, training=training)
+        critic_output = self.critic_head(output_from_common_layers, training=training)
 
-        critic_output = output_from_common_layers
-        # forward pass through actor layers
-        for layer in self.critic_layers:
-            critic_output = layer(critic_output)
         return actor_output, critic_output
 
     def action_value(self, obs):
         logits, value = self.predict(obs)
-        action = self.dist.predict(logits)
+        action = self.sample_action_from_logits.predict(logits)
         return np.squeeze(action, axis=-1), np.squeeze(value, axis=-1)
+
+    def top_action(self, obs):
+        logits, _ = self.predict(obs)
+        action = self.top_action_from_logits.predict(logits)
+        return np.squeeze(action, axis=-1)
+
+    def get_variables(self):
+        return self.get_weights()
+
+    def set_variables(self, variables):
+        self.set_weights(variables)
 
 
 class A2CAgent:
@@ -80,47 +121,46 @@ class A2CAgent:
             loss=[self._logits_loss, self._value_loss]
         )
 
-    def train(self, env, batch_sz=32, updates=100):
-        action_ids = np.empty((batch_sz,), dtype=np.int32)
-        rewards, dones, values = np.empty((3, batch_sz))
-        observations = np.empty((batch_sz,) + (Game.HEIGHT+2, Game.WIDTH+2, 2))
+    def initialize_model(self, env):
+        self.model.action_value(env.cur_obs()[None, :])
+        self.model.top_action(env.cur_obs()[None, :])
+
+    def generate_experience_batch(self, env, batch_size):
+        action_ids = np.empty((batch_size,), dtype=np.int32)
+        rewards, dones, values = np.empty((3, batch_size))
+        observations = np.empty((batch_size,) + (Game.HEIGHT+2, Game.WIDTH+2, 2))
 
         ep_rews = [0.0]
-        next_obs = env.reset()
-        for _ in range(updates):
-            for step in range(batch_sz):
-                observations[step] = next_obs.copy()
-                action_ids[step], values[step] = self.model.action_value(next_obs[None, :])
-                next_obs, rewards[step], dones[step] = env.step(self._action_from_id(action_ids[step]))
+        next_obs = env.cur_obs()
+        for step in range(batch_size):
+            observations[step] = next_obs.copy()
+            action_ids[step], values[step] = self.model.action_value(next_obs[None, :])
+            next_obs, rewards[step], dones[step] = env.step(self._action_from_id(action_ids[step]))
 
-                ep_rews[-1] += rewards[step]
-                if dones[step]:
-                    ep_rews.append(0.0)
-                    next_obs = env.reset()
+            ep_rews[-1] += rewards[step]
+            if dones[step]:
+                ep_rews.append(0.0)
+                next_obs = env.reset()
 
-            _, next_value = self.model.action_value(next_obs[None, :])
-            returns, advs = self._returns_advantages(rewards, dones, values, next_value)
-            acts_and_advs = np.concatenate([action_ids[:, None], advs[:, None]], axis=-1)
-            self.model.train_on_batch(observations, [acts_and_advs, returns])
+        _, next_value = self.model.action_value(next_obs[None, :])
+        returns, advs = self._returns_advantages(rewards, dones, values, next_value)
+        acts_and_advs = np.concatenate([action_ids[:, None], advs[:, None]], axis=-1)
+        return observations, acts_and_advs, returns
 
-        return ep_rews
-
-    def select_action(self, obs):
-        action_id, _ = self.model.action_value(obs[None, :])
+    def select_top_action(self, obs):
+        action_id = self.model.top_action(obs[None, :])
         return self._action_from_id(action_id)
 
     def save_model(self):
         self.model.save_weights('saved_model/weights', save_format='tf')
 
-    def load_model_if_previously_saved(self, env):
+    def load_model_if_previously_saved(self):
         if os.path.exists('saved_model'):
-            self.train(env, updates=1) # needed to initialize the model
-            self.model.load_weights('saved_model/weights')
+            self.model.load_weights('saved_model/weights').expect_partial()
 
-    def load_pretrained_model(self, env):
+    def load_pretrained_model(self):
         if os.path.exists('pretrained_model'):
-            self.train(env, updates=1) # needed to initialize the model
-            self.model.load_weights('pretrained_model/weights')
+            self.model.load_weights('pretrained_model/weights').expect_partial()
 
     def _returns_advantages(self, rewards, dones, values, next_value):
         returns = np.append(np.zeros_like(rewards), next_value, axis=-1)

@@ -33,6 +33,9 @@ class LearningEnvironment(object):
 
         return (observation, reward, done)
 
+    def cur_obs(self):
+        return self.build_observation(self.game)
+
     def build_observation(self, g):
         observation = np.zeros((Game.HEIGHT + 2, Game.WIDTH + 2, 2))
 
