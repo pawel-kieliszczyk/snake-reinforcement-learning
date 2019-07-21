@@ -1,6 +1,6 @@
 # SnakeAI
 
-Training AI to play a perfect game of Snake. With reinforcement learning (distributed A2C) it can learn to play a perfect game and score maximum points.
+Training AI to play the game of Snake. With reinforcement learning (distributed A2C) it can learn to play a perfect game and score maximum points.
 
 
 ## Overview
